@@ -17,3 +17,7 @@ dist/
 relay-helper/relay-helper
 relay-helper/relay-helper.arm64
 relay-helper/relay-helper.amd64
+
+# Generated Info.plist (xcodegen) + downloaded Sparkle CLI tools
+RelayNative/Info.plist
+.sparkle-tools/

@@ -79,10 +79,13 @@ codesign --force --options runtime --timestamp \
 # BEFORE the outer app, or notarization rejects the bundle).
 if [ -d "$APP/Contents/Frameworks" ]; then
   echo "→ Signing embedded frameworks…"
-  find "$APP/Contents/Frameworks" -maxdepth 3 \( -name "*.xpc" -o -name "*.app" \) -print0 \
+  # Nested helpers first (deepest), at any depth — Sparkle's XPC services live under
+  # Sparkle.framework/Versions/B/XPCServices, plus Autoupdate + Updater.app.
+  find "$APP/Contents/Frameworks" \( -name "*.xpc" -o -name "*.app" -o -name "Autoupdate" -o -name "*.dylib" \) -print0 \
     | while IFS= read -r -d '' nested; do
     codesign --force --options runtime --timestamp --sign "$IDENTITY" "$nested"
   done
+  # Then the frameworks themselves.
   find "$APP/Contents/Frameworks" -maxdepth 1 -name "*.framework" -print0 \
     | while IFS= read -r -d '' fw; do
     codesign --force --options runtime --timestamp --sign "$IDENTITY" "$fw"
@@ -125,11 +128,37 @@ spctl -a -t open --context context:primary-signature -vv "$DMG" 2>&1 | sed 's/^/
 
 VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist" 2>/dev/null || echo "0.1")
 
+# --- Sparkle appcast (EdDSA-signed; private key lives in your Keychain) -------
+# generate_appcast comes from the Sparkle tools. Set GENAPPCAST, or download the
+# Sparkle release tarball into .sparkle-tools/ (see RELEASE.md).
+GENAPPCAST="${GENAPPCAST:-$ROOT/.sparkle-tools/bin/generate_appcast}"
+if [ ! -x "$GENAPPCAST" ]; then
+  GENAPPCAST=$(find "$ROOT/build" -name generate_appcast -type f 2>/dev/null | head -1)
+fi
+APPCAST="$DIST/appcast.xml"
+if [ -n "${GENAPPCAST:-}" ] && [ -x "$GENAPPCAST" ]; then
+  echo "→ Generating signed appcast…"
+  APPCAST_SRC="$DIST/appcast-src"; rm -rf "$APPCAST_SRC"; mkdir -p "$APPCAST_SRC"
+  cp "$ZIP" "$APPCAST_SRC/"
+  "$GENAPPCAST" --download-url-prefix "https://github.com/hatimhtm/Relay/releases/download/v$VERSION/" "$APPCAST_SRC"
+  mv "$APPCAST_SRC/appcast.xml" "$APPCAST"
+  rm -rf "$APPCAST_SRC"
+else
+  echo "⚠ generate_appcast not found — skipping appcast (auto-update won't update without it)." >&2
+  echo "  Download the Sparkle tools into .sparkle-tools/ or set GENAPPCAST — see RELEASE.md." >&2
+  APPCAST=""
+fi
+
 echo "✓ Done."
 echo "  Notarized app: $APP"
 echo "  DMG (direct download): $DMG"
-echo "  Zip (Sparkle appcast): $ZIP"
+echo "  Zip (Sparkle update):  $ZIP"
+[ -n "$APPCAST" ] && echo "  Appcast (auto-update): $APPCAST"
 echo
-echo "Publish the release with the GitHub CLI:"
-echo "  gh release create v$VERSION \"$DMG\" \"$ZIP\" --title \"Relay v$VERSION\" --notes \"…\""
-echo "(then, once Sparkle is wired, regenerate + upload appcast.xml — see RELEASE.md)"
+echo "Publish the release with the GitHub CLI (tag MUST be v$VERSION to match the appcast URLs):"
+if [ -n "$APPCAST" ]; then
+  echo "  gh release create v$VERSION \"$DMG\" \"$ZIP\" \"$APPCAST\" --title \"Relay v$VERSION\" --notes \"…\""
+else
+  echo "  gh release create v$VERSION \"$DMG\" \"$ZIP\" --title \"Relay v$VERSION\" --notes \"…\""
+fi
+echo "Bump MARKETING_VERSION + CURRENT_PROJECT_VERSION in project.yml before each release."

@@ -41,6 +41,33 @@ runtime + secure timestamp → notarizes (waits for Apple) → staples → outpu
 `dist/Relay.app`, a drag-to-Applications `dist/Relay.dmg`, and `dist/Relay.zip` that run
 warning-free on any Mac. Publish with `gh release create` (the script prints the command).
 
+## Auto-update (Sparkle)
+
+Relay ships with [Sparkle](https://sparkle-project.org): it checks a signed `appcast.xml`
+on GitHub Releases in the background and offers a one-click in-app update — users never
+visit GitHub. Wiring is already done (SPM dependency + `SUFeedURL`/`SUPublicEDKey` in the
+generated `Info.plist`, pointing at `releases/latest/download/appcast.xml`).
+
+**One-time:** the EdDSA signing keypair is generated with Sparkle's `generate_keys`
+(private key stays in your login Keychain; the public key is `SUPublicEDKey` in
+`project.yml`). The Sparkle CLI tools (`generate_keys`, `generate_appcast`, `sign_update`)
+come from the Sparkle release tarball — `release.sh` looks for them in `.sparkle-tools/`
+(git-ignored) or the resolved SPM artifacts. To (re)fetch:
+```bash
+TAG=$(gh release view --repo sparkle-project/Sparkle --json tagName -q .tagName)
+mkdir -p .sparkle-tools && cd .sparkle-tools
+curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/$TAG/Sparkle-$TAG.tar.xz" | tar -xJ
+```
+
+**Each release:**
+1. Bump `MARKETING_VERSION` **and** `CURRENT_PROJECT_VERSION` in `project.yml`
+   (Sparkle compares `CURRENT_PROJECT_VERSION` to decide what's newer).
+2. `scripts/release.sh` → produces `dist/Relay.dmg`, `dist/Relay.zip`, and a signed
+   `dist/appcast.xml`, and prints the exact `gh release create vX …` command.
+3. Run that command. The tag **must** be `v<MARKETING_VERSION>` so the appcast's
+   download URLs resolve. Uploading `appcast.xml` to the latest release is what triggers
+   everyone's auto-update.
+
 ## Notes
 - `project.yml` uses **Automatic** signing for the Xcode IDE (Run just works when you're
   signed into your Developer account). The release script re-signs with explicit

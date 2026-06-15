@@ -6,6 +6,7 @@ import Translation
 struct RelayApp: App {
     @StateObject private var store = RelayStore.shared
     @StateObject private var lock = AppLock.shared
+    @StateObject private var updater = UpdaterModel.shared   // starts background update checks
 
     var body: some Scene {
         // Single window (not WindowGroup) so closing + reopening reuses the same
@@ -24,6 +25,7 @@ struct RelayApp: App {
         .defaultSize(width: 1180, height: 780)
         .commands {
             CommandGroup(after: .appInfo) {
+                CheckForUpdatesCommand()
                 Button("Lock Now") { lock.lockNow() }.keyboardShortcut("l", modifiers: .command)
             }
         }

@@ -80,8 +80,20 @@ private struct GeneralSettings: View {
         Form {
             Toggle("Show seen / delivery indicators in the sidebar", isOn: $showSeen)
             Toggle("Press Return to send (Shift+Return for a new line)", isOn: $enterToSend)
+            Section("Updates") {
+                LabeledContent("Version", value: Self.versionString)
+                Button("Check for Updates…") { UpdaterModel.shared.checkForUpdates() }
+                Text("Relay updates itself automatically. You can also check manually here.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
         .padding(20)
+    }
+
+    private static var versionString: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "\(v) (\(b))"
     }
 }
 
