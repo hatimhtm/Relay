@@ -1509,6 +1509,40 @@ final class RelayStore: ObservableObject {
                     }
                 }
             }
+            // Keep the SIDEBAR in sync with the message we just took in: bump the thread's
+            // activity/snippet/unread and re-sort so it floats to the top — and CREATE the row
+            // if we don't have this conversation yet. Without this, a message (especially from
+            // a new contact) would fire a notification but never appear in the list, because
+            // thread ordering otherwise relies on a separate "thread" event that may not arrive.
+            if isNew, !msg.system {
+                let looking = (activeThread == thread) && NSApp.isActive
+                let mine = msg.sender == selfID
+                let snippet = msg.hasMedia ? Self.mediaPlaceholder(msg.kind ?? "file") : msg.text
+                if let idx = threads.firstIndex(where: { $0.id == thread }) {
+                    threads[idx].lastActivity = max(threads[idx].lastActivity, msg.ts)
+                    if !snippet.isEmpty { threads[idx].snippet = snippet }
+                    if mine || looking {
+                        threads[idx].readUpTo = max(threads[idx].readUpTo, msg.ts)
+                        threads[idx].unread = false
+                    } else if msg.ts > threads[idx].readUpTo {
+                        // Only past our read watermark — so backfill of an already-read
+                        // message can't resurrect the unread dot.
+                        threads[idx].unread = true
+                    }
+                    sortThreads()
+                } else if !mine {
+                    // A conversation we have no row for yet (a brand-new chat). Add a minimal
+                    // row so it surfaces immediately, then ask the helper for its real
+                    // name / avatar / folder.
+                    let th = ChatThread(id: thread, contactID: msg.sender, name: "",
+                                        snippet: snippet, picture: "",
+                                        lastActivity: msg.ts, unread: !looking)
+                    threads.append(th)
+                    sortThreads()
+                    refreshThread(thread)
+                    refreshThreadContacts()
+                }
+            }
             // A genuinely new incoming message: if we're looking at this thread, auto-mark it
             // read (so it never accrues an unread count + the sender sees "Seen"); otherwise
             // notify (unless muted).
