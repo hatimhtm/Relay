@@ -101,3 +101,16 @@ See [`BUILD.md`](BUILD.md) and [`RELEASE.md`](RELEASE.md) for details.
 **AGPL-3.0** — see [`LICENSE`](LICENSE). Required because Relay statically incorporates AGPL-3.0 code (mautrix-meta); the complete corresponding source stays available. Third-party components are credited in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 <div align="center"><br><sub>Relay is an independent project — <strong>not affiliated with, authorized, or endorsed by Meta Platforms, Inc.</strong> All trademarks belong to their owners.</sub></div>
+
+---
+
+<p align="center">
+  <a href="https://hatimelhassak.is-a.dev"><img src="https://img.shields.io/badge/PORTFOLIO-1A1A1A?style=for-the-badge&logo=vercel&logoColor=CCFF00" alt="Portfolio" /></a>
+  <a href="https://cal.com/hatimelhassak/engineering-discovery"><img src="https://img.shields.io/badge/BOOK_A_CALL-CCFF00?style=for-the-badge&logo=googlecalendar&logoColor=1A1A1A" alt="Book a call" /></a>
+  <a href="https://www.linkedin.com/in/hatim-elhassak/"><img src="https://img.shields.io/badge/LINKEDIN-1A1A1A?style=for-the-badge&logo=linkedin&logoColor=CCFF00" alt="LinkedIn" /></a>
+  <a href="mailto:hatimelhassak.official@gmail.com"><img src="https://img.shields.io/badge/EMAIL-1A1A1A?style=for-the-badge&logo=gmail&logoColor=CCFF00" alt="Email" /></a>
+</p>
+
+<p align="center">
+  <code>///&nbsp;&nbsp;OPEN FOR NEW WORK&nbsp;&nbsp;///&nbsp;&nbsp;CONTRACT &amp; FREELANCE&nbsp;&nbsp;///&nbsp;&nbsp;REMOTE WORLDWIDE&nbsp;&nbsp;///</code>
+</p>
