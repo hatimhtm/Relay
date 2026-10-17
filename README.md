@@ -20,6 +20,10 @@ _A premium **native macOS client** for **Facebook Messenger**: SwiftUI + Liquid 
 
 </div>
 
+<p align="center">
+  <img src="assets-readme/screenshot.jpg" alt="Relay's conversation list and an open chat" width="100%" />
+</p>
+
 ---
 
 > [!WARNING]
